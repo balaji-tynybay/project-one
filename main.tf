@@ -15,11 +15,11 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_vpc" "tynybay_vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.vpc_cidr_block
 }
 
 resource "aws_internet_gateway" "tynybay_gw" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.tynybay_vpc.id
 
   tags = {
     Name = "main"
@@ -28,7 +28,7 @@ resource "aws_internet_gateway" "tynybay_gw" {
 
 resource "aws_subnet" "tynybay_subnet_1" {
   vpc_id     = aws_vpc.tynybay_vpc.id
-  cidr_block = "10.0.1.0/24"
+  cidr_block = var.subnet_cidr_block
 
   tags = {
     Name = "Main"
@@ -37,7 +37,7 @@ resource "aws_subnet" "tynybay_subnet_1" {
 
 
 resource "aws_route_table" "tynybay_route_table" {
-  vpc_id = aws_vpc.tynybay.id
+  vpc_id = aws_vpc.tynybay_vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -86,45 +86,27 @@ resource "aws_instance" "web" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
   associate_public_ip_address = true
-  user_data = <<EOF
-  #!/bin/bash
-
-# Update system packages
-sudo apt update && sudo apt upgrade -y
-
-# Install Nginx
-sudo apt install nginx -y
-
-# Start Nginx
-sudo systemctl start nginx
-
-# Enable Nginx on system boot
-sudo systemctl enable nginx
-
-# Create a new server block configuration file for your website
-sudo bash -c 'cat > /etc/nginx/sites-available/mywebsite.conf <<EOF
-server {
-    listen 80;
-    server_name mywebsite.com;
-
-    root /var/www/mywebsite;
-    index index.html;
-
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-}
-EOF'
-
-# Create a symbolic link to enable the new configuration
-sudo ln -s /etc/nginx/sites-available/mywebsite.conf /etc/nginx/sites-enabled/
-
-# Restart Nginx
-sudo systemctl restart nginx
-EOF
-  security_groups = [aws_security_group.allow_http]
+  subnet_id = aws_subnet.tynybay_subnet_1.id
+  security_groups = [aws_security_group.allow_http.id]
 
   tags = {
     Name = "web 1"
   }
+  user_data = <<EOF
+#!/bin/bash
+
+# Update system packages
+apt update && apt upgrade -y
+
+# Install Nginx
+apt install nginx -y
+
+# Start Nginx
+systemctl start nginx
+
+# Enable Nginx on system boot
+systemctl enable nginx
+
+
+EOF
 }
