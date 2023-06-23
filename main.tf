@@ -107,5 +107,6 @@ systemctl start nginx
 # Enable Nginx on system boot
 systemctl enable nginx
 
+
 EOF
 }
