@@ -21,18 +21,14 @@ resource "aws_vpc" "tynybay_vpc" {
 resource "aws_internet_gateway" "tynybay_gw" {
   vpc_id = aws_vpc.tynybay_vpc.id
 
-  tags = {
-    Name = "main"
-  }
+  tags = local.common_tags
 }
 
 resource "aws_subnet" "tynybay_subnet_1" {
   vpc_id     = aws_vpc.tynybay_vpc.id
   cidr_block = var.subnet_cidr_block
 
-  tags = {
-    Name = "Main"
-  }
+  tags = local.common_tags
 }
 
 
@@ -44,9 +40,7 @@ resource "aws_route_table" "tynybay_route_table" {
     gateway_id = aws_internet_gateway.tynybay_gw.id
   }
 
-  tags = {
-    Name = "Route table"
-  }
+  tags = local.common_tags
 }
 
 
@@ -77,9 +71,7 @@ resource "aws_security_group" "allow_http" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  tags = {
-    Name = "allow_http"
-  }
+  tags = local.common_tags
 }
 
 resource "aws_instance" "web" {
@@ -89,9 +81,7 @@ resource "aws_instance" "web" {
   subnet_id = aws_subnet.tynybay_subnet_1.id
   security_groups = [aws_security_group.allow_http.id]
 
-  tags = {
-    Name = "web 1"
-  }
+  tags = local.common_tags
   user_data = <<EOF
 #!/bin/bash
 
